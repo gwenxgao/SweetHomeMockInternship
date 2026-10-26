@@ -2008,6 +2008,47 @@ public class PlanComponent extends JComponent implements PlanView, Scrollable, P
    * that makes it fill <code>pageFormat</code> imageable size if this attribute is <code>null</code>.
    */
   public int print(Graphics g, PageFormat pageFormat, int pageIndex) {
+    if (pageIndex < 0) {
+      return NO_SUCH_PAGE;
+    }
+    if (this.home.getLevels().isEmpty()) {
+      return printSelectedLevel(g, pageFormat, pageIndex);
+    }
+
+    Level selectedLevel = this.home.getSelectedLevel();
+    try {
+      // Each viewable level contributes its own plan pages, in home order.
+      for (Level level : this.home.getLevels()) {
+        if (level.isViewable()) {
+          this.home.setSelectedLevel(level);
+          Rectangle2D bounds = getItemsBounds(g, getPaintedItems());
+          int levelPageCount = 1;
+          if (bounds != null
+              && this.home.getPrint() != null
+              && this.home.getPrint().getPlanScale() != null) {
+            float scale = this.home.getPrint().getPlanScale() * LengthUnit.centimeterToInch(72);
+            int columns = Math.max(1, (int)Math.ceil(bounds.getWidth() * scale / pageFormat.getImageableWidth()));
+            int rows = Math.max(1, (int)Math.ceil(bounds.getHeight() * scale / pageFormat.getImageableHeight()));
+            levelPageCount = columns * rows;
+          }
+          if (pageIndex < levelPageCount) {
+            // An empty viewable level still has a blank plan page.
+            return bounds == null ? PAGE_EXISTS : printSelectedLevel(g, pageFormat, pageIndex);
+          }
+          pageIndex -= levelPageCount;
+        }
+      }
+      return NO_SUCH_PAGE;
+    } finally {
+      // Printing is temporary navigation, including if rendering throws.
+      this.home.setSelectedLevel(selectedLevel);
+    }
+  }
+
+  /**
+   * Prints one page of the currently selected level, retaining fixed-scale tiling.
+   */
+  private int printSelectedLevel(Graphics g, PageFormat pageFormat, int pageIndex) {
     List<Selectable> printedItems = getPaintedItems(); 
     Rectangle2D printedItemBounds = getItemsBounds(g, printedItems);
     if (printedItemBounds != null) {
@@ -2033,14 +2074,8 @@ public class PlanComponent extends JComponent implements PlanView, Scrollable, P
       } else {
         // Apply print scale to paper size expressed in 1/72nds of an inch
         printScale = this.home.getPrint().getPlanScale().floatValue() * LengthUnit.centimeterToInch(72);
-        pagesPerRow = (int)(printedItemBounds.getWidth() * printScale / imageableWidth);
-        if (printedItemBounds.getWidth() * printScale != imageableWidth) {
-          pagesPerRow++;
-        }
-        pagesPerColumn = (int)(printedItemBounds.getHeight() * printScale / imageableHeight);
-        if (printedItemBounds.getHeight() * printScale != imageableHeight) {
-          pagesPerColumn++;
-        }
+        pagesPerRow = Math.max(1, (int)Math.ceil(printedItemBounds.getWidth() * printScale / imageableWidth));
+        pagesPerColumn = Math.max(1, (int)Math.ceil(printedItemBounds.getHeight() * printScale / imageableHeight));
         if (pageIndex >= pagesPerRow * pagesPerColumn) {
           return NO_SUCH_PAGE;
         }
