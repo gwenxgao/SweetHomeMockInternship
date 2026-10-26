@@ -4,10 +4,10 @@
 | --- | --- |
 | `task1-running.png` | The complete application window running locally. |
 | `task2-description.png` | The actual Modify furniture view with the edited description, after saving and reopening the home. |
-| `task3-volume.png` | The actual furniture table populated with calculated volumes in ascending order, alongside the application's Sort by menu containing Volume. |
+| `task3-volume.png` | The running application with calculated volumes populated in descending order and the context-menu Sort by submenu containing Volume. |
 | `task4-all-levels.pdf` | Output from the application's PDF printer: an all-level furniture table with a Level column, followed by the plans for Level 0, Level 1, and Level 2. |
 
-The Task 2 and Task 3 PNGs are component renderings produced from the modified application's Java Swing views by a local verification harness, using English labels and the standard cross-platform Swing look and feel. Their captions identify this verification method.
+The Task 2 and Task 3 PNGs were captured from the modified application while it was running locally. Task 2 shows the reopened furniture editor with the saved description. Task 3 shows the supplied multi-level sample with Volume selected as its sort property.
 
 ## Local verification
 
